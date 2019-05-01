@@ -1,24 +1,36 @@
 import requests
 import sqlite3
+import time
+import threading
 from bs4 import BeautifulSoup
-class Web():
+class Web(threading.Thread):
     def __init__(self,name,url):
+        threading.Thread.__init__(self)
         self.name = name
         self.url = url
-    def get_Newest(self,):
+        self.start()
+    def run(self):
+        while True:
+            self.get_Newest()
+            time.sleep(60)
+    def get_Newest(self):
         #select from DB
         with sqlite3.connect('userLove.db') as conn:
             c = conn.cursor()
             print(self.name)
 
-            for row in c.execute('SELECT * FROM newVideo where name="'+self.name+'"'):
+            for row in c.execute('SELECT url FROM newVideo where name="'+self.name+'"'):
                 print(row)
-                return self.searchNewest()
+                return row[0]
 
-
+            self.createNewLabel()
             return self.searchNewest()
 
-
+    def createNewLabel(self):
+        with sqlite3.connect('userLove.db') as conn:
+            c = conn.cursor()
+            c.executemany('INSERT INTO newVideo(name, url) VALUES (?,?)', [(self.name,self.url)])
+            conn.commit()
     def searchNewest(self):
         request = requests.get(self.url)
         content = request.content
@@ -26,9 +38,12 @@ class Web():
         container = soup.select("h3 a")
         #print(container[0].get_text(),container[0]['href'])
         href = "www.youtube.com"+container[0]['href']
-
+        with sqlite3.connect('userLove.db') as conn:
+            c = conn.cursor()
+            c.execute('UPDATE newVideo SET url = ? WHERE name = ?',(href, self.name))
+            conn.commit()
         #update DB
-        return container[0].get_text(),href
+        return href
         """for item in container:
             value = item.get_text()
             print(value, item['href'])"""

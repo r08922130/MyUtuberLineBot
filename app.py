@@ -58,6 +58,8 @@ def hello(word):
     print("hello", word)
 
 
+#t = setInterval(60,updateNew)
+#t.start()
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -91,7 +93,7 @@ def handle_message(event):
     line_bot_api.reply_message(event.reply_token, message)
 
 def getMylove(web):
-    title, href = web.get_Newest()
+    href = web.get_Newest()
 
     return TextSendMessage(text=href)
 def choose():
