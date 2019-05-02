@@ -8,6 +8,8 @@ class Web(threading.Thread):
         threading.Thread.__init__(self)
         self.name = name
         self.url = url
+        #kill thread when main thread is killed
+        self.daemon = True
         self.start()
     def run(self):
         while True:
@@ -17,10 +19,10 @@ class Web(threading.Thread):
         #select from DB
         with sqlite3.connect('userLove.db') as conn:
             c = conn.cursor()
-            print(self.name)
+            #print(self.name)
 
             for row in c.execute('SELECT url FROM newVideo where name="'+self.name+'"'):
-                print(row)
+                #print(row)
                 return row[0]
 
             self.createNewLabel()

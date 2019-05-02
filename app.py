@@ -60,6 +60,7 @@ def hello(word):
 
 #t = setInterval(60,updateNew)
 #t.start()
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
