@@ -21,18 +21,15 @@ videoTable = "newVideo"
 
 
 app = Flask(__name__)
-webs = {}
 with open("config.json") as file:
     config = json.load(file)
-with open("url.json") as file:
-    urls = json.load(file)
-    for url in urls:
-        webs[url] = Web(url,urls[url])
-
-print(webs)
 line_bot_api = LineBotApi(config["access_token"])
 handler = WebhookHandler(config["channel"])
 my_api = LineAPI(config["access_token"])
+webs = {}
+
+
+
 #print(my_api.getHeader())
 #create rich menu
 #req = requests.request('POST', my_api.createRichMenuURL() ,headers=my_api.getHeader(), data=json.dumps(my_api.getRichBody()).encode('utf-8'))
@@ -81,6 +78,11 @@ def callback():
 def handle_message(event):
 
     print(event)
+    if not existID(event.source.user_id):
+        with sqlite3.connect('userLove.db') as conn:
+            c = conn.cursor()
+            c.executemany('INSERT INTO userTable(userID, Ga, Tsai, How, office, hot, Geography) VALUES (?,?,?,?,?,?,?)', [(event.source.user_id,1,1,1,1,1,1)])
+            conn.commit()
     if event.message.text == 'get':
         message = getMylove(webs[0])
     elif event.message.text == 'choose':
@@ -93,12 +95,27 @@ def handle_message(event):
 
     line_bot_api.reply_message(event.reply_token, message)
 
+
 def getMylove(web):
     href = web.get_Newest()
 
     return TextSendMessage(text=href)
 def choose():
     pass
+def existID(id):
+    with sqlite3.connect('userLove.db') as conn:
+        c = conn.cursor()
+
+        for row in c.execute('SELECT * FROM userTable where userID="'+id+'"'):
+            return True
+        return False
+
+with open("url.json") as file:
+    urls = json.load(file)
+    for url in urls:
+        webs[url] = Web(url,urls[url],line_bot_api)
+
+print(webs)
 
 import os
 if __name__ == "__main__":
