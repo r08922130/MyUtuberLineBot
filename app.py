@@ -78,17 +78,30 @@ def callback():
 def handle_message(event):
 
     print(event)
-    if not existID(event.source.user_id):
+    """if not existID(event.source.user_id):
         with sqlite3.connect('userLove.db') as conn:
             c = conn.cursor()
-            c.executemany('INSERT INTO userTable(userID, Ga, Tsai, How, office, hot, Geography) VALUES (?,?,?,?,?,?,?)', [(event.source.user_id,1,1,1,1,1,1)])
-            conn.commit()
+            c.executemany('INSERT INTO userTable(userID, Ga, Tsai, How, office, hot, Geography) VALUES (?,?,?,?,?,?,?)', [(event.source.user_id,0,0,0,0,0,0)])
+            conn.commit()"""
     if event.message.text == 'get':
         message = getMylove(webs[0])
     elif event.message.text == 'choose':
         message = choose()
     elif event.message.text in urls:
-        message = getMylove(webs[event.message.text])
+        url = event.message.text
+        userID = event.source.user_id
+        if not exist(userID,url):
+            with sqlite3.connect('userLove.db') as conn:
+                c = conn.cursor()
+                c.executemany('INSERT INTO '+url+'Table(userID, like) VALUES (?,?)', [(userID,1)])
+                conn.commit()
+            message = getMylove(webs[url])
+        else:
+            with sqlite3.connect('userLove.db') as conn:
+                c = conn.cursor()
+                c.execute('DELETE FROM '+url+'Table where userID="'+userID+'"')
+                conn.commit()
+            message = TextSendMessage(text="UnSubscribe "+url)
 
     else :
         message = TextSendMessage(text=event.message.text)
@@ -98,21 +111,24 @@ def handle_message(event):
 
 def getMylove(web):
     href = web.get_Newest()
-
     return TextSendMessage(text=href)
 def choose():
     pass
-def existID(id):
+def exist(id,url):
     with sqlite3.connect('userLove.db') as conn:
         c = conn.cursor()
 
-        for row in c.execute('SELECT * FROM userTable where userID="'+id+'"'):
+        for row in c.execute('SELECT * FROM '+url+'Table where userID="'+id+'"'):
             return True
         return False
 
 with open("url.json") as file:
     urls = json.load(file)
     for url in urls:
+        with sqlite3.connect('userLove.db') as conn:
+            c = conn.cursor()
+            c.execute('create table if not exists '+url+'Table(userID INTEGER NOT NULL,like INTEGER NOT NULL)')
+            conn.commit()
         webs[url] = Web(url,urls[url],line_bot_api)
 
 print(webs)
@@ -120,5 +136,5 @@ print(webs)
 import os
 if __name__ == "__main__":
 
-    port = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)

@@ -26,7 +26,7 @@ class Web(threading.Thread):
             #print(self.name)
 
             for row in self.newest(c):
-                #print(row)
+                print(row)
                 return row[0]
 
             self.createNewLabel()
@@ -52,37 +52,18 @@ class Web(threading.Thread):
                 c = conn.cursor()
                 if self.lineBot:
                     for row in self.newest(c):
+                        #update DB
                         if row[0] != href:
+                            print(row)
                             if auto:
-                                for row in c.execute('SELECT userID FROM userTable where '+self.name+'='+str(1)):
-                                    print(row[0])
-                                    self.lineBot.push_message(row[0],TextSendMessage(text=href))
+                                for id in c.execute('SELECT userID FROM '+self.name+'Table where like='+str(1)):
+                                    #print(row[0])
+                                    self.lineBot.push_message(id[0],TextSendMessage(text=href))
+
                             c.execute('UPDATE newVideo SET url = ? WHERE name = ?',(href, self.name))
                             conn.commit()
         else:
             href = self.searchNewest(auto=auto)
 
-        #update DB
+
         return href
-        """for item in container:
-            value = item.get_text()
-            print(value, item['href'])"""
-
-
-
-
-#web = Web("https://www.youtube.com/user/coolmantsai/videos")
-#web.get_Newest()
-
-#print(content)
-
-#file = open('result.text','w')
-#file.write(soup.get_text() + '\n')
-
-#print(container)
-#
-"""for item in container:
-    value = item.get_text()
-    print(value)
-    file.write(value + '\n')"""
-#file.close()
